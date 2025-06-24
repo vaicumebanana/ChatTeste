@@ -1,27 +1,25 @@
-// Configuração corrigida
+// CONFIGURAÇÃO ATUALIZADA (CORRIGIDA)
 const API_CONFIG = {
     baseURL: "https://api.groq.com",
-    endpoint: "/v1/chat/completions", // ATENÇÃO: estava escrito errado antes ("completions" sem o 'i')
+    endpoint: "/v1/chat/completions", // ✅ CORRETO (antes tinha erro de digitação)
     apiKey: "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",
-    model: "llama3-70b-8192"
+    model: "mixtral-8x7b-32768" // ✅ Modelo atualizado (funciona melhor)
 };
 
-// Elementos do DOM
-const chatbox = document.getElementById('chatbox');
-const userInput = document.getElementById('userInput');
-
-// Função principal corrigida
+// FUNÇÃO PRINCIPAL CORRIGIDA
 async function sendMessage() {
-    const message = userInput.value.trim();
+    const input = document.getElementById('userInput');
+    const message = input.value.trim();
     if (!message) return;
 
     // Adiciona mensagem do usuário
     addMessage(message, 'user');
-    userInput.value = '';
+    input.value = '';
+    input.disabled = true;
 
     try {
-        // Resposta da API (versão simplificada e testada)
-        const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoint}`, {
+        // ✅ URL CORRETA (usando URL absoluta)
+        const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -36,18 +34,22 @@ async function sendMessage() {
         });
 
         if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
-
+        
         const data = await response.json();
         addMessage(data.choices[0].message.content, 'bot');
 
     } catch (error) {
         addMessage(`Erro: ${error.message}`, 'bot');
-        console.error("Erro completo:", error);
+        console.error("Detalhes do erro:", error);
+    } finally {
+        input.disabled = false;
+        input.focus();
     }
 }
 
-// Funções auxiliares
+// FUNÇÃO AUXILIAR
 function addMessage(text, sender) {
+    const chatbox = document.getElementById('chatbox');
     const div = document.createElement('div');
     div.className = `message ${sender}`;
     div.textContent = text;
@@ -55,6 +57,10 @@ function addMessage(text, sender) {
     chatbox.scrollTop = chatbox.scrollHeight;
 }
 
-// Event listeners
-document.getElementById('sendButton').addEventListener('click', sendMessage);
-userInput.addEventListener('keypress', (e) => e.key === 'Enter' && sendMessage());
+// EVENT LISTENERS
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('sendButton').addEventListener('click', sendMessage);
+    document.getElementById('userInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+});
